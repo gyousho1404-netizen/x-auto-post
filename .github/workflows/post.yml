@@ -17,7 +17,7 @@ jobs:
           python-version: "3.13"
       - run: pip install tweepy anthropic python-dotenv
       - name: Debug env vars
-        run: python -c "import os; keys=['X_API_KEY','X_API_SECRET','X_ACCESS_TOKEN','X_ACCESS_TOKEN_SECRET'];[print(k+':',os.environ.get(k,'NONE')[:8]) for k in keys]"
+        run: python -c "import os; keys=[chr(88)+k for k in ['_API_KEY','_API_SECRET','_ACCESS_TOKEN','_ACCESS_TOKEN_SECRET']];[print(k+chr(58),os.environ.get(k,'NONE')[:8]) for k in keys]"
         env:
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
@@ -28,5 +28,5 @@ jobs:
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET 
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

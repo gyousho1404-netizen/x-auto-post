@@ -16,6 +16,11 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install tweepy anthropic python-dotenv
+      - name: Debug env vars
+        run: python -c "import os; print('API_KEY:', os.environ.get('X_API_KEY','NONE')[:8]); print('ACCESS:', os.environ.get('X_ACCESS_TOKEN','NONE')[:15])"
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
       - run: python x_auto_post.py
         env:
           X_API_KEY: ${{ secrets.X_API_KEY }}

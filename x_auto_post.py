@@ -1,8 +1,6 @@
 import os
 import tweepy
 import anthropic
-import urllib.request
-import xml.etree.ElementTree as ET
 from dotenv import load_dotenv
 from datetime import datetime, timezone, timedelta
 
@@ -15,9 +13,6 @@ OSAKA_URL = "https://osaka-profit.com/"
 def get_jst_now():
     jst = timezone(timedelta(hours=9))
     return datetime.now(jst)
-
-def get_utc_hour():
-    return datetime.now(timezone.utc).hour
 
 def is_weekday():
     return get_jst_now().weekday() < 5
@@ -42,21 +37,28 @@ def generate_tweet(post_type):
         messages=[{"role": "user", "content": prompt}]
     )
     tweet = msg.content[0].text.strip()
-    # 280文字を超える場合は切り詰め
     if len(tweet) > 280:
         tweet = tweet[:277] + "..."
     return tweet
 
 def get_post_type():
-    hour = get_utc_hour()
-    if hour == 1:  # UTC1時 = JST10時
+    # GitHub Actions の cron トリガーを元に投稿タイプを決定（遅延対策）
+    schedule = os.getenv("SCHEDULE", "")
+    if schedule == "0 1 * * *":
+        return "blog" if is_weekday() else "general"
+    elif schedule == "0 3 * * *":
+        return "jizokuka"
+    elif schedule == "0 10 * * *":
+        return "osaka"
+    # ローカル実行用フォールバック（時間で判定）
+    hour = datetime.now(timezone.utc).hour
+    if hour == 1:
         return "blog" if is_weekday() else "general"
     elif hour == 3:
         return "jizokuka"
-    elif hour == 10:  # UTC10時 = JST19時
+    elif hour == 10:
         return "osaka"
-    else:
-        return "general"
+    return "general"
 
 def post_to_x(t):
     c = tweepy.Client(
@@ -70,7 +72,7 @@ def post_to_x(t):
 
 def main():
     pt = get_post_type()
-    print(f"投稿開始... タイプ:{pt}")
+    print(f"投稿開始... タイプ:{pt}, スケジュール:{os.getenv('SCHEDULE','未設定')}")
     tweet = generate_tweet(pt)
     print(f"文字数:{len(tweet)}")
     print(f"生成文:{tweet}")
@@ -79,4 +81,3 @@ def main():
 
 if __name__ == "__main__":
     main()
- 

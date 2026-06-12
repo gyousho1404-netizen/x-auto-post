@@ -53,7 +53,7 @@ def get_post_type():
         return "blog" if is_weekday() else "general"
     elif hour == 3:
         return "jizokuka"
-    elif hour == 9:
+    elif hour == 10:  # UTC10時 = JST19時
         return "osaka"
     else:
         return "general"

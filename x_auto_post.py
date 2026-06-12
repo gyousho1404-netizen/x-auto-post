@@ -49,7 +49,7 @@ def generate_tweet(post_type):
 
 def get_post_type():
     hour = get_utc_hour()
-    if hour == 23:
+    if hour == 1:  # UTC1時 = JST10時
         return "blog" if is_weekday() else "general"
     elif hour == 3:
         return "jizokuka"

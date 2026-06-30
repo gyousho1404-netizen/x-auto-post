@@ -17,6 +17,10 @@ def get_jst_now():
 def is_weekday():
     return get_jst_now().weekday() < 5
 
+def is_mwf():
+    # 月(0)・水(2)・金(4)
+    return get_jst_now().weekday() in [0, 2, 4]
+
 def generate_tweet(post_type):
     client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
@@ -26,6 +30,10 @@ def generate_tweet(post_type):
         prompt = base + f"テーマ：ブログ更新のお知らせ。「本日のブログ更新しました！」で始め、補助金・行政書士に関する内容を1文添えてURL（{BLOG_URL}）を含める。ハッシュタグは#補助金と#行政書士の2つ。絵文字1〜2個。"
     elif post_type == "jizokuka":
         prompt = base + "テーマ：小規模事業者持続化補助金第20回が公募中。対象は小規模事業者。相談を促す内容。最適なハッシュタグ2〜3個。絵文字1〜2個。"
+    elif post_type == "it_intro":
+        prompt = base + "テーマ：IT導入補助金の公募案内。中小企業・小規模事業者向けITツール導入支援。補助率・対象ツールの概要を親しみやすく紹介。相談を促す内容。最適なハッシュタグ2〜3個。絵文字1〜2個。"
+    elif post_type == "it_detail":
+        prompt = base + "テーマ：IT導入補助金の具体的な内容紹介。補助率1/2〜3/4・上限額・対象ソフトウェア（会計・販売管理・ECなど）のうち1点を掘り下げて紹介。中小企業に役立つ実用的なトーン。最適なハッシュタグ2〜3個。絵文字1〜2個。"
     elif post_type == "osaka":
         prompt = base + "テーマ：小規模事業者持続化補助金の具体的な内容紹介。補助率2/3・上限50万円（条件により200万円）・対象経費（広告費・店舗改装など）のうち1点を掘り下げて紹介。小規模事業者に役立つ実用的なトーン。最適なハッシュタグ2〜3個。絵文字1〜2個。"
     else:
@@ -47,17 +55,17 @@ def get_post_type():
     if schedule == "0 1 * * *":
         return "blog" if is_weekday() else "general"
     elif schedule == "0 3 * * *":
-        return "jizokuka"
+        return "it_intro" if is_mwf() else "jizokuka"
     elif schedule == "0 10 * * *":
-        return "osaka"
+        return "it_detail" if is_mwf() else "osaka"
     # ローカル実行用フォールバック（時間で判定）
     hour = datetime.now(timezone.utc).hour
     if hour == 1:
         return "blog" if is_weekday() else "general"
     elif hour == 3:
-        return "jizokuka"
+        return "it_intro" if is_mwf() else "jizokuka"
     elif hour == 10:
-        return "osaka"
+        return "it_detail" if is_mwf() else "osaka"
     return "general"
 
 def post_to_x(t):

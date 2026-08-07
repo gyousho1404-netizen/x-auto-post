@@ -2,9 +2,7 @@ name: X Auto Post
 
 on:
   schedule:
-    - cron: "0 1 * * *"
     - cron: "0 3 * * *"
-    - cron: "0 10 * * *"
   workflow_dispatch:
 
 jobs:
@@ -31,6 +29,3 @@ jobs:
           X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SCHEDULE: ${{ github.event.schedule }}
- 
- 
- 

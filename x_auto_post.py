@@ -36,10 +36,11 @@ def generate_tweet(post_type):
         "(4)絵文字は多くても1〜2個、ハッシュタグは効果的なものを2〜3個。"
         "(5)締切日や金額上限などの数字は、確実なもの以外は断定せず『締切が近づいています』"
         "『最大◯百万円規模』のような表現に留め、詳細は相談・確認を促す(誤情報を避ける)。"
+        "(6)本文にURL・リンクは絶対に含めないこと。詳細へ誘導する場合は『プロフィールのリンクから』と書くこと。"
     )
 
     if post_type == "blog":
-        prompt = base + f"【型:金額インパクト+ブログ誘導】補助金にまつわる意外な数字や『知らないと損』な一言でフックを作り、続けて本日ブログを更新した旨とその記事で分かることを1文で伝え、URL({BLOG_URL})を必ず含める。ハッシュタグは#補助金 #行政書士 を基本に。"
+        prompt = base + "【型:金額インパクト+ブログ誘導】補助金にまつわる意外な数字や『知らないと損』な一言でフックを作り、続けて本日ブログを更新した旨とその記事で分かることを1文で伝える。詳しくは『プロフィールのリンクから』と誘導する(本文にURLは書かない)。ハッシュタグは#補助金 #行政書士 を基本に。"
     elif post_type == "jizokuka":
         prompt = base + "【型:30秒チェックリスト】小規模事業者持続化補助金について、『あなたの事業は対象かも』と読者が自己診断できるチェック項目を□付きで2つ示し、当てはまれば気軽に相談してほしいと促す。"
     elif post_type == "it_intro":
@@ -62,23 +63,21 @@ def generate_tweet(post_type):
     return tweet
 
 def get_post_type():
-    # GitHub Actions の cron トリガーを元に投稿タイプを決定（遅延対策）
-    schedule = os.getenv("SCHEDULE", "")
-    if schedule == "0 1 * * *":
-        return "blog" if is_weekday() else "general"
-    elif schedule == "0 3 * * *":
-        return "it_intro" if is_mwf() else "jizokuka"
-    elif schedule == "0 10 * * *":
-        return "it_detail" if is_mwf() else "osaka"
-    # ローカル実行用フォールバック（時間で判定）
-    hour = datetime.now(timezone.utc).hour
-    if hour == 1:
-        return "blog" if is_weekday() else "general"
-    elif hour == 3:
-        return "it_intro" if is_mwf() else "jizokuka"
-    elif hour == 10:
-        return "it_detail" if is_mwf() else "osaka"
-    return "general"
+    # 1日1回・曜日で投稿タイプをローテーション（コスト最適化）
+    # 月:締切カウントダウン(AI導入) 火:チェックリスト(持続化)
+    # 水:金額インパクト(AI導入)   木:失敗あるある(持続化)
+    # 金:ブログ誘導               土日:業種特化
+    weekday = get_jst_now().weekday()  # 月=0 ... 日=6
+    rotation = {
+        0: "it_intro",
+        1: "jizokuka",
+        2: "it_detail",
+        3: "osaka",
+        4: "blog",
+        5: "general",
+        6: "general",
+    }
+    return rotation.get(weekday, "general")
 
 def post_to_x(t):
     c = tweepy.Client(
